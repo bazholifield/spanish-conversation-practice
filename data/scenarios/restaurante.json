@@ -1,0 +1,79 @@
+{
+  "id": "restaurante",
+  "name": "En el restaurante",
+  "icon": "🍽️",
+  "order": 1,
+  "opening": "¡Buenas tardes! ¿Tiene reserva o viene sin reserva?",
+  "patterns": [
+    {
+      "id": "reservation",
+      "triggers": {
+        "keywords": ["reserva", "reservar", "mesa", "persona", "sitio", "lugar", "terraza", "interior", "ventana", "número"]
+      },
+      "follow_ups": [
+        "¿Cuántas personas son?",
+        "¿Prefiere mesa en la terraza o en el interior?",
+        "¿Tienen alguna preferencia de zona?",
+        "¿Es para alguna ocasión especial?"
+      ]
+    },
+    {
+      "id": "ordering",
+      "triggers": {
+        "keywords": ["pedir", "querer", "tomar", "carta", "menú", "plato", "primero", "segundo", "postre", "recomendación", "especialidad", "hoy", "día"]
+      },
+      "follow_ups": [
+        "¿Ha podido ver la carta o necesita un momento más?",
+        "El plato del día es cocido madrileño, ¿le apetece?",
+        "¿Le traigo algo para picar mientras decide?",
+        "¿Tiene alguna alergia o intolerancia alimentaria?",
+        "Para el primero tenemos ensalada, sopa o paté. ¿Qué prefiere?"
+      ]
+    },
+    {
+      "id": "food_detail",
+      "triggers": {
+        "keywords": ["carne", "pescado", "pollo", "ternera", "cerdo", "cordero", "punto", "hecho", "crudo", "salsa", "guarnición", "acompañamiento", "arroz", "patata", "verdura"]
+      },
+      "follow_ups": [
+        "¿Cómo le gustaría el punto de la carne? ¿Al punto, poco hecha o muy hecha?",
+        "¿Con o sin guarnición?",
+        "La salsa va aparte, ¿la quiere en el plato o al lado?",
+        "¿Prefiere patatas fritas o ensalada de acompañamiento?"
+      ]
+    },
+    {
+      "id": "drinks",
+      "triggers": {
+        "keywords": ["beber", "bebida", "agua", "vino", "cerveza", "refresco", "zumo", "café", "botella", "copa", "jarra", "grifo", "natural", "con gas", "sin gas"]
+      },
+      "follow_ups": [
+        "¿Agua con gas o sin gas?",
+        "¿Prefiere vino de la casa o quiere ver la carta de vinos?",
+        "¿Le pongo una jarra de agua para la mesa?",
+        "¿Quiere algo para beber mientras espera el primero?"
+      ]
+    },
+    {
+      "id": "bill",
+      "triggers": {
+        "keywords": ["cuenta", "pagar", "tarjeta", "efectivo", "dividir", "separar", "propina", "ticket", "factura"]
+      },
+      "follow_ups": [
+        "¿Pagan juntos o por separado?",
+        "¿En efectivo o con tarjeta?",
+        "¿Necesita factura?",
+        "¿Todo ha estado bien? ¿Les ha gustado?"
+      ]
+    }
+  ],
+  "fallbacks": [
+    "¿Algo más que le pueda traer?",
+    "¿Cómo está todo? ¿Está bueno?",
+    "¿Necesita algo más?",
+    "¿Le traigo más pan?",
+    "¿Quiere ver la carta de postres?",
+    "Tómese el tiempo que necesite.",
+    "¿Le apetece un café o una infusión para terminar?"
+  ]
+}

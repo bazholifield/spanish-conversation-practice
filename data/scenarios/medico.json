@@ -1,0 +1,55 @@
+{
+  "id": "medico",
+  "name": "En el médico",
+  "icon": "🏥",
+  "order": 4,
+  "opening": "Buenos días, pase y siéntese. ¿Qué le trae hoy por aquí?",
+  "patterns": [
+    {
+      "id": "symptoms",
+      "triggers": {
+        "keywords": ["dolor", "doler", "malestar", "fiebre", "temperatura", "tos", "resfriado", "gripe", "mareo", "náusea", "vómito", "cansancio", "fatiga", "herida", "golpe", "caída", "infección", "inflamación", "picor", "ardor"]
+      },
+      "follow_ups": [
+        "¿Desde cuándo tiene estos síntomas?",
+        "¿El dolor es constante o va y viene?",
+        "¿Puede describirme cómo es el dolor? ¿Punzante, sordo, presión?",
+        "¿Le mejora o empeora con algo en concreto?",
+        "¿Ha tenido fiebre? ¿Se la ha tomado?"
+      ]
+    },
+    {
+      "id": "history",
+      "triggers": {
+        "keywords": ["antes", "vez", "pasado", "historia", "crónico", "operación", "cirugía", "alergia", "medicamento", "tomar", "pastilla", "tratamiento", "diagnóstico", "enfermedad"]
+      },
+      "follow_ups": [
+        "¿Ha tenido algo parecido antes?",
+        "¿Toma algún medicamento habitualmente?",
+        "¿Tiene alergia a algún medicamento conocido?",
+        "¿Hay alguna enfermedad crónica en su historial?",
+        "¿Ha estado en urgencias recientemente por algo similar?"
+      ]
+    },
+    {
+      "id": "treatment",
+      "triggers": {
+        "keywords": ["receta", "medicamento", "antibiótico", "analgésico", "pastilla", "jarabe", "pomada", "análisis", "prueba", "radiografía", "especialista", "derivar", "cita", "seguimiento"]
+      },
+      "follow_ups": [
+        "Voy a recetarle algo. ¿Tiene alguna farmacia de confianza?",
+        "¿Puede volver en una semana para ver cómo evoluciona?",
+        "Si en tres días no mejora, vuelva sin cita.",
+        "Le voy a pedir unos análisis para descartar otras cosas."
+      ]
+    }
+  ],
+  "fallbacks": [
+    "¿Hay algo más que le esté molestando?",
+    "¿Ha notado algún otro síntoma, aunque le parezca sin importancia?",
+    "¿Duerme bien últimamente?",
+    "¿Cómo está su nivel de estrés en general?",
+    "¿Ha viajado recientemente al extranjero?",
+    "¿Come y bebe bien? ¿Ha perdido el apetito?"
+  ]
+}

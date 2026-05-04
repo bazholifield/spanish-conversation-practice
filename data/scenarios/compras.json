@@ -1,0 +1,64 @@
+{
+  "id": "compras",
+  "name": "De compras",
+  "icon": "🛍️",
+  "order": 3,
+  "opening": "¡Buenos días! ¿Le puedo ayudar en algo?",
+  "patterns": [
+    {
+      "id": "looking",
+      "triggers": {
+        "keywords": ["buscar", "mirar", "querer", "necesitar", "regalo", "camiseta", "pantalón", "vestido", "zapato", "chaqueta", "abrigo", "bolso", "ropa", "prenda", "artículo"]
+      },
+      "follow_ups": [
+        "¿Es para usted o para regalo?",
+        "¿Tiene algún color o estilo en mente?",
+        "¿Para qué ocasión lo busca?",
+        "¿Tiene alguna marca de referencia?"
+      ]
+    },
+    {
+      "id": "size",
+      "triggers": {
+        "keywords": ["talla", "número", "medida", "grande", "pequeño", "mediano", "largo", "corto", "ancho", "estrecho", "ajustado", "holgado", "quedar", "probar"]
+      },
+      "follow_ups": [
+        "¿Sabe qué talla usa normalmente?",
+        "¿Quiere probárselo? Los probadores están al fondo.",
+        "Si la talla no le va bien, lo tenemos en más tallas.",
+        "¿Le ha quedado bien o quiere probar con la de arriba?"
+      ]
+    },
+    {
+      "id": "price",
+      "triggers": {
+        "keywords": ["precio", "costar", "euro", "caro", "barato", "oferta", "rebaja", "descuento", "promoción", "temporada", "saldo", "presupuesto"]
+      },
+      "follow_ups": [
+        "Ahora mismo está en oferta, tiene un veinte por ciento de descuento.",
+        "Tenemos una opción similar un poco más económica, ¿se la enseño?",
+        "Las rebajas empiezan la semana que viene, si puede esperar.",
+        "¿Tiene algún presupuesto en mente?"
+      ]
+    },
+    {
+      "id": "payment",
+      "triggers": {
+        "keywords": ["pagar", "tarjeta", "efectivo", "bizum", "ticket", "factura", "cambio", "devolver", "cambiar", "garantía"]
+      },
+      "follow_ups": [
+        "¿En efectivo o con tarjeta?",
+        "¿Quiere el ticket por si necesita cambiarlo?",
+        "Tiene treinta días para devolverlo con el ticket.",
+        "¿Necesita bolsa o lleva la suya?"
+      ]
+    }
+  ],
+  "fallbacks": [
+    "¿Puedo ayudarle con algo más?",
+    "Si necesita otra talla, no dude en pedírmela.",
+    "Estamos recibiendo nueva colección esta semana.",
+    "¿Le ha gustado cómo le queda?",
+    "Si quiere, le guardo uno mientras sigue mirando."
+  ]
+}

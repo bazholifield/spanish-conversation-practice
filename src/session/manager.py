@@ -16,12 +16,23 @@ class SessionManager:
         self._turn_count = 0
         self._initial_question: str = ""
 
-    def start(self) -> None:
+    def start(self, scenario_id: str | None = None) -> None:
         self._active = True
         self.transcript.start()
-        with open(self.settings.QUESTIONS_FILE, encoding="utf-8") as f:
-            questions = json.load(f)
-        self._initial_question = random.choice(questions)["text"]
+
+        if scenario_id:
+            scenario = self._load_scenario(scenario_id)
+            self._initial_question = scenario["opening"]
+            self.responder.set_scenario(scenario)
+        else:
+            with open(self.settings.QUESTIONS_FILE, encoding="utf-8") as f:
+                questions = json.load(f)
+            self._initial_question = random.choice(questions)["text"]
+
+    def _load_scenario(self, scenario_id: str) -> dict:
+        path = self.settings.SCENARIOS_DIR / f"{scenario_id}.json"
+        with open(path, encoding="utf-8") as f:
+            return json.load(f)
 
     def is_active(self) -> bool:
         return self._active and self._turn_count < self.settings.MAX_TURNS

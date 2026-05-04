@@ -1,0 +1,53 @@
+{
+  "id": "direcciones",
+  "name": "Pedir direcciones",
+  "icon": "🗺️",
+  "order": 5,
+  "opening": "Perdona que te moleste, estoy un poco perdido. ¿Sabes cómo llegar a la estación de metro más cercana?",
+  "patterns": [
+    {
+      "id": "navigation",
+      "triggers": {
+        "keywords": ["calle", "avenida", "plaza", "paseo", "girar", "torcer", "seguir", "continuar", "cruzar", "pasar", "llegar", "derecha", "izquierda", "recto", "adelante", "esquina", "semáforo", "rotonda", "puente", "túnel"]
+      },
+      "follow_ups": [
+        "¿Y una vez que cruce el semáforo, hacia dónde giro?",
+        "Perdona, ¿cuántas calles tengo que seguir recto antes de girar?",
+        "¿Qué hay en la esquina para saber que es la calle correcta?",
+        "¿La estación está a la derecha o a la izquierda cuando llego?",
+        "¿Hay algún punto de referencia que me ayude a orientarme?"
+      ]
+    },
+    {
+      "id": "distance_time",
+      "triggers": {
+        "keywords": ["lejos", "cerca", "minuto", "hora", "kilómetro", "metro", "distancia", "tiempo", "tardar", "andar", "pie", "coche", "autobús", "taxi", "bicicleta"]
+      },
+      "follow_ups": [
+        "¿Está muy lejos? ¿Cuánto se tarda andando?",
+        "¿Merece la pena ir andando o es mejor coger el autobús?",
+        "¿Hay algún autobús que me lleve directamente?",
+        "¿En qué número de bus tengo que subir?"
+      ]
+    },
+    {
+      "id": "landmarks",
+      "triggers": {
+        "keywords": ["iglesia", "banco", "supermercado", "farmacia", "parque", "edificio", "tienda", "hospital", "colegio", "ayuntamiento", "mercado", "parada", "señal"]
+      },
+      "follow_ups": [
+        "¿Hay alguna tienda o edificio conocido cerca que pueda usar de referencia?",
+        "¿Paso por delante de alguna farmacia o supermercado?",
+        "¿El edificio tiene algo especial que lo haga reconocible?",
+        "Gracias, y si me pierdo, ¿hay alguna parada de bus cerca por si acaso?"
+      ]
+    }
+  ],
+  "fallbacks": [
+    "Perdona, no te he entendido bien. ¿Puedes repetirlo más despacio?",
+    "¿Puedes señalarme la dirección aproximada?",
+    "¿Tú crees que si pregunto en aquella tienda me pueden ayudar también?",
+    "Muchas gracias, eres muy amable. ¿Y si me pierdo?",
+    "¿Hay señales por el camino o tengo que ir contando calles?"
+  ]
+}

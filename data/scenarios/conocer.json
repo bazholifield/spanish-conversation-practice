@@ -1,0 +1,65 @@
+{
+  "id": "conocer",
+  "name": "Conocer gente",
+  "icon": "👋",
+  "order": 6,
+  "opening": "Hola, ¿eres nuevo por aquí? No creo que nos hayamos visto antes.",
+  "patterns": [
+    {
+      "id": "intro",
+      "triggers": {
+        "keywords": ["llamarse", "nombre", "ser", "venir", "llegar", "nuevo", "reciente", "mudarse", "vivir", "tiempo", "semana", "mes"]
+      },
+      "follow_ups": [
+        "¿Y cuánto tiempo llevas viviendo aquí?",
+        "¿Qué te trajo a España?",
+        "¿Viniste solo o con familia o amigos?",
+        "¿Ya conoces bien el barrio o todavía estás explorando?"
+      ]
+    },
+    {
+      "id": "impressions",
+      "triggers": {
+        "keywords": ["gustar", "parecer", "pensar", "ciudad", "barrio", "España", "español", "gente", "ambiente", "cultura", "diferente", "sorprender", "esperar", "imaginar"]
+      },
+      "follow_ups": [
+        "¿Qué es lo que más te ha sorprendido de España?",
+        "¿Hay algo que te haya costado adaptarte?",
+        "¿Es muy diferente a tu país de origen?",
+        "¿Qué es lo que más te gusta del barrio?",
+        "¿La gente de aquí te ha parecido abierta y simpática?"
+      ]
+    },
+    {
+      "id": "plans",
+      "triggers": {
+        "keywords": ["quedarse", "irse", "plan", "futuro", "trabajo", "estudiar", "proyecto", "tiempo", "definitivo", "temporal", "visa", "permiso"]
+      },
+      "follow_ups": [
+        "¿Cuánto tiempo tienes pensado quedarte?",
+        "¿Has venido por trabajo, por estudios o simplemente porque te apetecía?",
+        "¿Tienes ya algo organizado o lo estás viendo sobre la marcha?",
+        "¿Tienes contactos aquí o estás empezando de cero?"
+      ]
+    },
+    {
+      "id": "social",
+      "triggers": {
+        "keywords": ["amigo", "conocer", "gente", "salir", "quedar", "plan", "sitio", "recomendación", "restaurante", "bar", "zona", "evento"]
+      },
+      "follow_ups": [
+        "¿Ya tienes grupo de amigos aquí o todavía estás conociendo gente?",
+        "¿Qué tipo de planes te gustan? ¿Eres más de bares, de naturaleza, de cultura?",
+        "Si quieres, puedo recomendarte algunos sitios buenos del barrio.",
+        "¿Dónde has quedado con gente hasta ahora? ¿En alguna app o a través del trabajo?"
+      ]
+    }
+  ],
+  "fallbacks": [
+    "¿Y qué tal te está yendo todo?",
+    "¿Echas de menos tu país o estás disfrutando del cambio?",
+    "¿El idioma te está dando muchos problemas?",
+    "¿Qué fue lo primero que hiciste cuando llegaste?",
+    "¿Hay algo que necesites y no sepas cómo conseguir aquí?"
+  ]
+}

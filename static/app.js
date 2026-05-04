@@ -12,12 +12,27 @@ class App {
     this.canvas = document.getElementById('wave');
     this.ctx    = this.canvas.getContext('2d');
 
-    document.getElementById('start-btn').addEventListener('click', () => this.init());
+    document.getElementById('start-btn').addEventListener('click', () => this.init(null));
+    document.getElementById('end-btn').addEventListener('click', () => this.endSession());
+
+    this.loadScenarios();
   }
 
-  // ── Bootstrap ───────────────────────────────────────────────────────────────
+  // ── Setup ────────────────────────────────────────────────────────────────────
 
-  async init() {
+  async loadScenarios() {
+    const scenarios = await fetch('/api/scenarios').then(r => r.json()).catch(() => []);
+    const grid = document.getElementById('scenario-grid');
+    scenarios.forEach(s => {
+      const btn = document.createElement('button');
+      btn.className = 'scenario-card';
+      btn.innerHTML = `<span class="scenario-icon">${s.icon}</span><span class="scenario-name">${s.name}</span>`;
+      btn.addEventListener('click', () => this.init(s.id));
+      grid.appendChild(btn);
+    });
+  }
+
+  async init(scenarioId) {
     try {
       this.stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
     } catch {
@@ -27,9 +42,12 @@ class App {
 
     this.audioCtx = new AudioContext();
     await this.audioCtx.resume();
-
     this.resizeCanvas();
     window.addEventListener('resize', () => this.resizeCanvas());
+
+    document.getElementById('scenario-label').textContent = scenarioId
+      ? document.querySelector(`[data-id="${scenarioId}"] .scenario-name`)?.textContent || ''
+      : '';
 
     this.showScreen('conversation');
     this.setStatus('connecting', 'Connecting');
@@ -37,7 +55,7 @@ class App {
 
     this.ws = new WebSocket(`ws://${location.host}/ws`);
     this.ws.binaryType = 'arraybuffer';
-    this.ws.onopen    = () => this.ws.send(JSON.stringify({ type: 'start' }));
+    this.ws.onopen    = () => this.ws.send(JSON.stringify({ type: 'start', scenario: scenarioId }));
     this.ws.onmessage = (e) => this.onMessage(JSON.parse(e.data));
     this.ws.onerror   = () => this.setStatus('error', 'Connection error');
   }
@@ -47,7 +65,7 @@ class App {
   async onMessage(msg) {
     switch (msg.type) {
       case 'question':
-        await this.speak(msg.text, msg.audio);
+        await this.speak(msg.audio);
         this.listen();
         break;
       case 'transcribed':
@@ -56,7 +74,6 @@ class App {
         setTimeout(() => this.listen(), 400);
         break;
       case 'end':
-        // Replace the whole page with the self-contained transcript HTML
         document.open();
         document.write(msg.html);
         document.close();
@@ -64,12 +81,25 @@ class App {
     }
   }
 
+  // ── End button ───────────────────────────────────────────────────────────────
+
+  endSession() {
+    cancelAnimationFrame(this.silenceRaf);
+    this.stopDrawing();
+    if (this.recorder?.state !== 'inactive') {
+      this.recorder.onstop = null; // prevent sendAudio from firing
+      this.recorder.stop();
+    }
+    this.setStatus('processing', 'Ending');
+    this.drawIdle();
+    this.ws?.send(JSON.stringify({ type: 'end_session' }));
+  }
+
   // ── Speaking ─────────────────────────────────────────────────────────────────
 
-  async speak(text, audioB64) {
+  async speak(audioB64) {
     this.stopDrawing();
     this.setStatus('speaking', 'Speaking');
-    document.getElementById('question').textContent = '';
 
     const bytes = Uint8Array.from(atob(audioB64), c => c.charCodeAt(0));
     const audioBuf = await this.audioCtx.decodeAudioData(bytes.buffer.slice(0));
@@ -85,10 +115,7 @@ class App {
     this.drawWave('#3d9bff');
 
     return new Promise(resolve => {
-      source.onended = () => {
-        this.stopDrawing();
-        resolve();
-      };
+      source.onended = () => { this.stopDrawing(); resolve(); };
       source.start();
     });
   }
@@ -116,14 +143,14 @@ class App {
   }
 
   startSilenceDetection() {
-    const THRESHOLD   = 35;    // average frequency magnitude (0–255) that counts as speech
-    const SPEECH_MIN  = 500;   // ms of sound needed before silence countdown starts
-    const SILENCE_MAX = 2000;  // ms of silence to trigger stop
+    const THRESHOLD   = 35;
+    const SPEECH_MIN  = 500;
+    const SILENCE_MAX = 2000;
 
     const data = new Uint8Array(this.analyser.frequencyBinCount);
-    let speechStart   = null;
-    let speechReady   = false;
-    let silenceStart  = null;
+    let speechStart  = null;
+    let speechReady  = false;
+    let silenceStart = null;
 
     const check = () => {
       this.analyser.getByteFrequencyData(data);
@@ -138,10 +165,7 @@ class App {
         if (!silenceStart) silenceStart = Date.now();
         const elapsed = Date.now() - silenceStart;
         this.setSilenceBar(elapsed / SILENCE_MAX);
-        if (elapsed >= SILENCE_MAX) {
-          this.stopRecording();
-          return;
-        }
+        if (elapsed >= SILENCE_MAX) { this.stopRecording(); return; }
       }
 
       this.silenceRaf = requestAnimationFrame(check);
@@ -168,14 +192,13 @@ class App {
       const buf = await this.audioCtx.decodeAudioData(ab);
       this.ws.send(this.encodeWAV(buf));
     } catch {
-      // Send an empty WAV header so server knows we had a decode failure
       this.ws.send(new ArrayBuffer(44));
     }
   }
 
   encodeWAV(audioBuf) {
     const TARGET_RATE = 16000;
-    const src   = audioBuf.getChannelData(0); // mono
+    const src   = audioBuf.getChannelData(0);
     const ratio = audioBuf.sampleRate / TARGET_RATE;
     const len   = Math.floor(src.length / ratio);
     const pcm   = new Int16Array(len);
@@ -191,20 +214,16 @@ class App {
 
     str(0,  'RIFF'); v.setUint32(4,  36 + pcm.length * 2, true);
     str(8,  'WAVE'); str(12, 'fmt ');
-    v.setUint32(16, 16,          true);  // chunk size
-    v.setUint16(20, 1,           true);  // PCM
-    v.setUint16(22, 1,           true);  // mono
-    v.setUint32(24, TARGET_RATE, true);  // sample rate
-    v.setUint32(28, TARGET_RATE * 2, true); // byte rate
-    v.setUint16(32, 2,           true);  // block align
-    v.setUint16(34, 16,          true);  // bits per sample
+    v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true);
+    v.setUint32(24, TARGET_RATE, true); v.setUint32(28, TARGET_RATE * 2, true);
+    v.setUint16(32, 2, true); v.setUint16(34, 16, true);
     str(36, 'data'); v.setUint32(40, pcm.length * 2, true);
     pcm.forEach((s, i) => v.setInt16(44 + i * 2, s, true));
 
     return buf;
   }
 
-  // ── Waveform drawing ─────────────────────────────────────────────────────────
+  // ── Waveform ─────────────────────────────────────────────────────────────────
 
   drawWave(color) {
     const { canvas, ctx } = this;
@@ -216,10 +235,8 @@ class App {
 
       const W = canvas.width, H = canvas.height;
       ctx.clearRect(0, 0, W, H);
-
       const barW = W / data.length;
       const cy   = H / 2;
-
       ctx.shadowColor = color;
       ctx.shadowBlur  = 10;
 
@@ -230,7 +247,6 @@ class App {
         ctx.fillRect(i * barW, cy - bh, Math.max(barW - 1, 1), bh < 1 ? 1 : bh * 2);
       }
     };
-
     frame();
   }
 
@@ -242,9 +258,8 @@ class App {
       this.rafId = requestAnimationFrame(frame);
       const W = canvas.width, H = canvas.height;
       ctx.clearRect(0, 0, W, H);
-
-      ctx.fillStyle   = '#1e1e3a';
-      ctx.shadowBlur  = 0;
+      ctx.fillStyle  = '#1e1e3a';
+      ctx.shadowBlur = 0;
       ctx.globalAlpha = 1;
 
       const barW = 5, gap = 3;
@@ -255,10 +270,8 @@ class App {
         const bh = Math.abs(Math.sin(i * 0.45 + t)) * 5 + 2;
         ctx.fillRect(i * (barW + gap), cy - bh, barW, bh * 2);
       }
-
       t += 0.025;
     };
-
     frame();
   }
 
@@ -276,19 +289,12 @@ class App {
   }
 
   setStatus(state, label) {
-    document.getElementById('status-dot').className  = `dot ${state}`;
+    document.getElementById('status-dot').className   = `dot ${state}`;
     document.getElementById('status-text').textContent = label;
   }
 
   setSilenceBar(progress) {
     document.getElementById('silence-bar').style.width = `${Math.min(progress * 100, 100)}%`;
-  }
-
-  flashHeard(text) {
-    const el = document.getElementById('heard');
-    el.textContent = `"${text}"`;
-    el.classList.add('visible');
-    setTimeout(() => el.classList.remove('visible'), 2500);
   }
 
   showScreen(name) {

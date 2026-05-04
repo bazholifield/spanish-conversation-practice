@@ -1,29 +1,32 @@
 import asyncio
 import base64
+import json
 import os
 import tempfile
 from pathlib import Path
 
+import edge_tts
 import uvicorn
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
-from gtts import gTTS
 
 from config.settings import Settings
 from src.session.manager import SessionManager
 from ui.transcript_viewer import TranscriptViewer
 
+VOICE = "es-ES-AlvaroNeural"
+
 app = FastAPI()
 
 
-def _tts_to_b64(text: str, settings: Settings) -> str:
-    with tempfile.NamedTemporaryFile(suffix=".mp3", delete=False) as f:
-        tmp = f.name
-    try:
-        gTTS(text=text, lang=settings.TTS_LANGUAGE, slow=settings.TTS_SLOW).save(tmp)
-        return base64.b64encode(Path(tmp).read_bytes()).decode()
-    finally:
-        os.unlink(tmp)
+async def _tts_to_b64(text: str) -> str:
+    communicate = edge_tts.Communicate(text, VOICE)
+    audio_data = b""
+    async for chunk in communicate.stream():
+        if chunk["type"] == "audio":
+            audio_data += chunk["data"]
+    return base64.b64encode(audio_data).decode()
 
 
 def _transcribe_wav(wav_bytes: bytes, language: str) -> str | None:
@@ -42,6 +45,19 @@ def _transcribe_wav(wav_bytes: bytes, language: str) -> str | None:
         os.unlink(tmp)
 
 
+@app.get("/api/scenarios")
+async def list_scenarios():
+    settings = Settings()
+    scenarios = []
+    if settings.SCENARIOS_DIR.exists():
+        files = sorted(settings.SCENARIOS_DIR.glob("*.json"),
+                       key=lambda f: json.loads(f.read_text(encoding="utf-8")).get("order", 99))
+        for f in files:
+            data = json.loads(f.read_text(encoding="utf-8"))
+            scenarios.append({"id": data["id"], "name": data["name"], "icon": data["icon"]})
+    return JSONResponse(scenarios)
+
+
 @app.websocket("/ws")
 async def websocket_endpoint(ws: WebSocket):
     await ws.accept()
@@ -55,16 +71,23 @@ async def websocket_endpoint(ws: WebSocket):
         if msg.get("type") != "start":
             return
 
-        session.start()
+        scenario_id = msg.get("scenario") or None
+        session.start(scenario_id=scenario_id)
         current_question = session.get_initial_question()
 
         while session.is_active():
-            audio_b64 = await loop.run_in_executor(None, _tts_to_b64, current_question, settings)
+            audio_b64 = await _tts_to_b64(current_question)
             await ws.send_json({"type": "question", "text": current_question, "audio": audio_b64})
 
-            wav_bytes = await ws.receive_bytes()
+            # Receive either binary audio or a JSON control message (end button)
+            data = await ws.receive()
+            if data.get("text"):
+                ctrl = json.loads(data["text"])
+                if ctrl.get("type") == "end_session":
+                    break
+                continue
 
-            # Empty WAV (44 bytes = header only) means STT failed on client side
+            wav_bytes = data.get("bytes") or b""
             if len(wav_bytes) <= 44:
                 await ws.send_json({"type": "no_speech"})
                 continue
@@ -77,11 +100,8 @@ async def websocket_endpoint(ws: WebSocket):
 
             await ws.send_json({"type": "transcribed", "text": text})
 
-            if text.lower().strip() in settings.EXIT_COMMANDS:
-                session.record_turn(current_question, text)
-                break
-
             session.record_turn(current_question, text)
+
             follow_up = session.generate_follow_up(text)
             if follow_up is None:
                 break
@@ -96,7 +116,6 @@ async def websocket_endpoint(ws: WebSocket):
         pass
 
 
-# Serve static files — define websocket route first so it takes priority
 app.mount("/", StaticFiles(directory="static", html=True), name="static")
 
 

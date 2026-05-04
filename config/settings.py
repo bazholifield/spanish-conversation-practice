@@ -7,6 +7,7 @@ class Settings:
     TRANSCRIPT_DIR = BASE_DIR / "transcripts"
     QUESTIONS_FILE = DATA_DIR / "questions.json"
     PATTERNS_FILE = DATA_DIR / "patterns.json"
+    SCENARIOS_DIR = DATA_DIR / "scenarios"
 
     # Speech — swap INPUT_MODE to "text" to skip mic during development
     STT_LANGUAGE = "es-ES"

@@ -1,0 +1,54 @@
+{
+  "id": "bar",
+  "name": "En el bar",
+  "icon": "🍺",
+  "order": 2,
+  "opening": "¡Buenas! ¿Qué te pongo?",
+  "patterns": [
+    {
+      "id": "order_drink",
+      "triggers": {
+        "keywords": ["caña", "cerveza", "vino", "copa", "tinto", "blanco", "rosado", "vermú", "agua", "refresco", "zumo", "tónica", "gin", "cubata", "chupito", "ronda", "otra", "mismo"]
+      },
+      "follow_ups": [
+        "¿Con algo de picar o solo la bebida?",
+        "¿Te pongo una caña o prefieres botellín?",
+        "Tenemos vino de la tierra muy bueno hoy, ¿te apetece probarlo?",
+        "¿Quieres que te ponga la misma o cambias?"
+      ]
+    },
+    {
+      "id": "food_bar",
+      "triggers": {
+        "keywords": ["tapa", "pincho", "ración", "bocadillo", "montadito", "croqueta", "tortilla", "jamón", "queso", "ensaladilla", "boquerón", "aceituna", "patata", "bravas", "pulpo"]
+      },
+      "follow_ups": [
+        "Las croquetas están recién hechas, te las recomiendo.",
+        "¿Quieres ración o media ración?",
+        "La tortilla la hacemos con cebolla, ¿está bien así?",
+        "¿Te pongo también un poco de pan?"
+      ]
+    },
+    {
+      "id": "chat",
+      "triggers": {
+        "keywords": ["vivir", "trabajar", "venir", "llevar", "tiempo", "barrio", "zona", "conocer", "primera", "vez", "extranjero", "turista", "visitar"]
+      },
+      "follow_ups": [
+        "¿Eres de por aquí o estás de visita?",
+        "¿Cuánto tiempo llevas en el barrio?",
+        "¿Y qué te parece el barrio? ¿Te gusta?",
+        "Pues bienvenido, este bar lleva aquí cuarenta años.",
+        "¿Tienes ya sitios de confianza por la zona?"
+      ]
+    }
+  ],
+  "fallbacks": [
+    "¿Otra ronda?",
+    "¿Todo bien?",
+    "¿Te pongo algo más?",
+    "Hoy hay partido más tarde, ¿te quedas a verlo?",
+    "¿Tienes el bono de cliente o pagas suelto?",
+    "¿Cómo lo llevas?"
+  ]
+}
