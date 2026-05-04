@@ -51,10 +51,8 @@ class App {
         this.listen();
         break;
       case 'transcribed':
-        this.flashHeard(msg.text);
         break;
       case 'no_speech':
-        // Don't restart until the flash finishes so the user knows what happened
         setTimeout(() => this.listen(), 400);
         break;
       case 'end':
@@ -71,7 +69,7 @@ class App {
   async speak(text, audioB64) {
     this.stopDrawing();
     this.setStatus('speaking', 'Speaking');
-    document.getElementById('question').textContent = text;
+    document.getElementById('question').textContent = '';
 
     const bytes = Uint8Array.from(atob(audioB64), c => c.charCodeAt(0));
     const audioBuf = await this.audioCtx.decodeAudioData(bytes.buffer.slice(0));
@@ -118,9 +116,9 @@ class App {
   }
 
   startSilenceDetection() {
-    const THRESHOLD   = 12;    // average frequency magnitude (0–255) that counts as speech
+    const THRESHOLD   = 35;    // average frequency magnitude (0–255) that counts as speech
     const SPEECH_MIN  = 500;   // ms of sound needed before silence countdown starts
-    const SILENCE_MAX = 3000;  // ms of silence to trigger stop
+    const SILENCE_MAX = 2000;  // ms of silence to trigger stop
 
     const data = new Uint8Array(this.analyser.frequencyBinCount);
     let speechStart   = null;

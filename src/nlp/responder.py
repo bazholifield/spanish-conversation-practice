@@ -9,7 +9,6 @@ class RuleBasedResponder:
         self.settings = settings
         self._patterns = None
         self._used: set[str] = set()
-        self._fallback_count = 0
 
     @property
     def patterns(self) -> dict:
@@ -25,7 +24,6 @@ class RuleBasedResponder:
             if triggers & set(parsed.keywords):
                 candidate = self._pick(pattern["follow_ups"])
                 if candidate:
-                    self._fallback_count = 0
                     return candidate
 
         # 2. Topic-label match (broader, catches lemma-matched topics)
@@ -33,17 +31,10 @@ class RuleBasedResponder:
             if pattern["id"] in parsed.topics:
                 candidate = self._pick(pattern["follow_ups"])
                 if candidate:
-                    self._fallback_count = 0
                     return candidate
 
-        # 3. Generic fallback
-        if self._fallback_count < self.settings.FALLBACK_RESPONSES_BEFORE_END:
-            candidate = self._pick(self.patterns["fallbacks"])
-            if candidate:
-                self._fallback_count += 1
-                return candidate
-
-        return None
+        # 3. Keep probing with open-ended questions until keywords emerge
+        return self._pick(self.patterns["fallbacks"])
 
     def _pick(self, options: list[str]) -> str | None:
         available = [o for o in options if o not in self._used]

@@ -14,16 +14,18 @@ class ParsedResponse:
 
 
 TOPIC_MAP: dict[str, set[str]] = {
-    "family":           {"familia", "hermano", "hermana", "madre", "padre", "hijo", "hija", "abuelo", "abuela", "mamá", "papá"},
-    "work":             {"trabajo", "trabajar", "empresa", "oficina", "profesión", "carrera", "jefe", "sueldo"},
-    "study":            {"estudiar", "universidad", "escuela", "clase", "curso", "examen", "estudiante"},
-    "food":             {"comida", "comer", "cocinar", "restaurante", "plato", "receta", "hambre"},
-    "travel":           {"viajar", "viaje", "país", "ciudad", "vacaciones", "visitar", "turismo", "vuelo"},
-    "hobbies":          {"deporte", "música", "leer", "bailar", "nadar", "jugar", "pintar", "guitarra", "fútbol", "tenis"},
-    "daily_life":       {"rutina", "mañana", "tarde", "noche", "semana", "horario", "levantarse", "dormir"},
-    "friends":          {"amigo", "amiga", "compañero", "salir", "quedar", "fiesta", "grupo"},
-    "home":             {"casa", "piso", "apartamento", "barrio", "vivir", "habitación"},
-    "language_learning": {"español", "aprender", "idioma", "lengua", "práctica", "nivel"},
+    "origin":           {"nacer", "crecer", "ciudad", "pueblo", "barrio", "región", "mudarse", "volver", "venir", "origen", "tierra", "costa", "norte", "sur"},
+    "family":           {"familia", "hermano", "hermana", "madre", "padre", "hijo", "hija", "abuelo", "abuela", "mamá", "papá", "esposo", "esposa", "pareja"},
+    "work":             {"trabajo", "trabajar", "empresa", "oficina", "profesión", "carrera", "jefe", "sueldo", "empleo", "puesto"},
+    "study":            {"estudiar", "universidad", "escuela", "clase", "curso", "examen", "estudiante", "facultad", "carrera"},
+    "food":             {"comida", "comer", "cocinar", "restaurante", "plato", "receta", "hambre", "sabor", "bebida"},
+    "travel":           {"viajar", "viaje", "vacaciones", "visitar", "turismo", "vuelo", "playa", "montaña", "destino"},
+    "hobbies":          {"deporte", "música", "leer", "bailar", "nadar", "jugar", "pintar", "guitarra", "fútbol", "tenis", "fotografía", "afición"},
+    "daily_life":       {"rutina", "mañana", "tarde", "noche", "semana", "horario", "levantarse", "dormir", "transporte"},
+    "friends":          {"amigo", "amiga", "compañero", "salir", "quedar", "fiesta", "grupo", "amistad"},
+    "home":             {"casa", "piso", "apartamento", "barrio", "vivir", "habitación", "alquilar", "vecino"},
+    "language_learning": {"español", "aprender", "idioma", "lengua", "práctica", "nivel", "acento", "gramática"},
+    "emotions":         {"sentir", "feliz", "triste", "nervioso", "contento", "preocupado", "emocionado", "estresado", "ilusión"},
 }
 
 
