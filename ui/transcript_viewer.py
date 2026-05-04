@@ -15,9 +15,7 @@ class TranscriptViewer:
         self.lookup = VocabularyLookup(settings)
         self.conjugator = SpanishConjugator()
 
-    def generate(self, transcript: Transcript) -> str:
-        self.settings.TRANSCRIPT_DIR.mkdir(parents=True, exist_ok=True)
-
+    def to_html(self, transcript: Transcript) -> str:
         unique_words = transcript.unique_spanish_words()
         vocab = self.lookup.lookup_batch(list(unique_words))
 
@@ -27,7 +25,11 @@ class TranscriptViewer:
                 if conj:
                     data["conjugation"] = conj
 
-        html = self._render(transcript, vocab)
+        return self._render(transcript, vocab)
+
+    def generate(self, transcript: Transcript) -> str:
+        self.settings.TRANSCRIPT_DIR.mkdir(parents=True, exist_ok=True)
+        html = self.to_html(transcript)
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         out = self.settings.TRANSCRIPT_DIR / f"transcript_{timestamp}.html"
         out.write_text(html, encoding="utf-8")

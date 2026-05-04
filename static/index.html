@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Spanish Practice</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+
+  <div id="start" class="screen active">
+    <p class="tagline">Práctica de Español</p>
+    <button id="start-btn">Comenzar</button>
+    <p class="hint">Say <em>salir</em> to finish and view your transcript.</p>
+  </div>
+
+  <div id="conversation" class="screen">
+    <div id="status">
+      <span id="status-dot" class="dot"></span>
+      <span id="status-text"></span>
+    </div>
+    <canvas id="wave"></canvas>
+    <p id="question"></p>
+    <p id="heard"></p>
+    <div id="silence-track"><div id="silence-bar"></div></div>
+  </div>
+
+  <script src="/app.js"></script>
+</body>
+</html>

@@ -1,8 +1,10 @@
-# Speech
+# Web server
+fastapi>=0.111.0
+uvicorn[standard]>=0.29.0
+
+# Speech (server-side STT + TTS)
 SpeechRecognition>=3.10.0
 gTTS>=2.5.0
-pygame>=2.5.0
-pyaudio>=0.2.14
 
 # NLP
 spacy>=3.7.0
@@ -12,5 +14,7 @@ spacy>=3.7.0
 mlconjug3>=3.9.0
 deep-translator>=1.11.4
 
-# UI
+# Terminal UI (main.py text mode only)
 rich>=13.7.0
+pygame>=2.5.0
+pyaudio>=0.2.14
