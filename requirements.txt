@@ -15,6 +15,6 @@ mlconjug3>=3.9.0
 deep-translator>=1.11.4
 
 # Terminal UI (main.py only — not needed for the web server)
-# rich>=13.7.0
-# pygame>=2.5.0
-# pyaudio>=0.2.14
+rich>=13.7.0
+pygame>=2.5.0
+# pyaudio>=0.2.14 (only needed for speech INPUT_MODE — mic capture)

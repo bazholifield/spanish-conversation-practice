@@ -1,8 +1,13 @@
+import asyncio
 import os
 import tempfile
-from gtts import gTTS
+
+import edge_tts
 import pygame
+
 from config.settings import Settings
+
+VOICE = "es-ES-AlvaroNeural"
 
 
 class TextToSpeech:
@@ -11,11 +16,11 @@ class TextToSpeech:
         pygame.mixer.init()
 
     def speak(self, text: str) -> None:
-        tts = gTTS(text=text, lang=self.settings.TTS_LANGUAGE, slow=self.settings.TTS_SLOW)
+        rate = "-20%" if self.settings.TTS_SLOW else "+0%"
         with tempfile.NamedTemporaryFile(suffix=".mp3", delete=False) as f:
             tmp_path = f.name
         try:
-            tts.save(tmp_path)
+            asyncio.run(self._synthesize(text, rate, tmp_path))
             pygame.mixer.music.load(tmp_path)
             pygame.mixer.music.play()
             while pygame.mixer.music.get_busy():
@@ -23,3 +28,8 @@ class TextToSpeech:
         finally:
             pygame.mixer.music.unload()
             os.unlink(tmp_path)
+
+    @staticmethod
+    async def _synthesize(text: str, rate: str, path: str) -> None:
+        communicate = edge_tts.Communicate(text, VOICE, rate=rate)
+        await communicate.save(path)
