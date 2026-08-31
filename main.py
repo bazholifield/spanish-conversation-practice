@@ -35,7 +35,7 @@ def main():
     transcript = session.end()
     ui.display_session_summary(transcript)
 
-    viewer = TranscriptViewer(settings)
+    viewer = TranscriptViewer(settings, parser=session.parser)
     html_path = viewer.generate(transcript)
     ui.display_transcript_info(html_path)
 

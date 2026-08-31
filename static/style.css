@@ -183,6 +183,23 @@ body {
   50%      { opacity: 0.3; }
 }
 
+#exchange {
+  width: min(640px, 90vw);
+  min-height: 4.5rem;
+  text-align: center;
+}
+#question-text {
+  font-size: 1.15rem;
+  line-height: 1.5;
+  color: #e0e0f0;            /* 15.20:1 */
+}
+#heard-text {
+  margin-top: 0.5rem;
+  font-size: 0.95rem;
+  font-style: italic;
+  color: #9a9ad0;            /* 7.47:1 */
+}
+
 #wave {
   width: min(640px, 90vw);
   height: 110px;

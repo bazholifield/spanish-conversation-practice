@@ -4,28 +4,55 @@ import re
 from datetime import datetime
 
 from config.settings import Settings
+from src.nlp.parser import NLPParser
 from src.session.transcript import Transcript
 from src.vocabulary.lookup import VocabularyLookup
 from src.vocabulary.conjugator import SpanishConjugator
 
 
 class TranscriptViewer:
-    def __init__(self, settings: Settings):
+    def __init__(self, settings: Settings, parser: NLPParser | None = None):
         self.settings = settings
         self.lookup = VocabularyLookup(settings)
         self.conjugator = SpanishConjugator()
+        # Shared with the session where possible; loading a second spaCy
+        # pipeline costs ~156 MB for no reason.
+        self.parser = parser or NLPParser(settings)
 
     def to_html(self, transcript: Transcript) -> str:
         unique_words = transcript.unique_spanish_words()
         vocab = self.lookup.lookup_batch(list(unique_words))
+        lemmas = self._verb_lemmas(transcript)
 
         for word, data in vocab.items():
-            if self.conjugator.looks_like_infinitive(word):
-                conj = self.conjugator.conjugate(word)
+            # People speak in conjugated forms ("quiero"), but conjugating
+            # needs the infinitive ("querer"), so go through the lemma. Fall
+            # back to the spoken word when it already is one.
+            root = lemmas.get(word)
+            if not root and self.conjugator.looks_like_infinitive(word):
+                root = word
+
+            if root and self.conjugator.looks_like_infinitive(root):
+                conj = self.conjugator.conjugate(root)
                 if conj:
                     data["conjugation"] = conj
+                    if root != word:
+                        data["lemma"] = root
 
         return self._render(transcript, vocab)
+
+    def _verb_lemmas(self, transcript: Transcript) -> dict[str, str]:
+        """Map every spoken verb form to its infinitive: quiero -> querer."""
+        if not transcript.turns:
+            return {}
+
+        text = " ".join(f"{t.question} {t.response}" for t in transcript.turns)
+        parsed = self.parser.parse(text)
+        return {
+            token["text"]: token["lemma"]
+            for token in parsed.tokens
+            if token["pos"] in ("VERB", "AUX") and token["lemma"]
+        }
 
     def generate(self, transcript: Transcript) -> str:
         self.settings.TRANSCRIPT_DIR.mkdir(parents=True, exist_ok=True)
@@ -65,6 +92,13 @@ class TranscriptViewer:
         return "".join(result)
 
     def _turns_html(self, transcript: Transcript) -> str:
+        if not transcript.turns:
+            return (
+                '\n      <p class="empty-note">Nothing was recorded this session, so there\'s '
+                'no vocabulary to review. If the microphone never picked you up, check that the '
+                'browser has permission and that the input device is the one you\'re speaking into.</p>'
+            )
+
         html = ""
         for turn in transcript.turns:
             bot = self._annotate(turn.question, "bot")
@@ -176,6 +210,10 @@ class TranscriptViewer:
   table.conj td {{ padding: 0.25rem 0.5rem; color: #ccc; }}
   table.conj tr:nth-child(even) td {{ background: rgba(255,255,255,0.03); }}
   .no-data {{ color: #a8a8c0; font-style: italic; font-size: 0.85rem; }}
+  .empty-note {{
+    color: #a8a8c0; line-height: 1.7; padding: 1.25rem;
+    border: 1px solid #0f3460; border-radius: 10px; background: #16213e;
+  }}
 
   @media (prefers-reduced-motion: reduce) {{
     *, *::before, *::after {{
@@ -221,7 +259,9 @@ function showWord(word, trigger) {{
   let html = `<h2 lang="es">${{word}}</h2>${{translation}}`;
 
   if (data.conjugation && Object.keys(data.conjugation).length > 0) {{
-    html += `<div class="section-title">Conjugation</div>`;
+    html += data.lemma
+      ? `<div class="section-title">Conjugation of <span lang="es">${{data.lemma}}</span></div>`
+      : `<div class="section-title">Conjugation</div>`;
     for (const [tense, forms] of Object.entries(data.conjugation)) {{
       html += `<div class="section-title" style="margin-top:0.8rem;color:#e0e0e0">${{tense}}</div>`;
       html += `<table class="conj"><caption class="sr-only">${{tense}} of ${{word}}</caption><tbody>`;

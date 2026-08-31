@@ -55,7 +55,7 @@ async def websocket_endpoint(ws: WebSocket):
     settings = Settings()
     loop = asyncio.get_running_loop()
     session = SessionManager(settings)
-    viewer = TranscriptViewer(settings)
+    viewer = TranscriptViewer(settings, parser=session.parser)
 
     try:
         msg = await ws.receive_json()

@@ -94,12 +94,18 @@ class App {
   async onMessage(msg) {
     switch (msg.type) {
       case 'question':
+        // Show it as well as speak it: needed if you can't hear the audio,
+        // and the only way to tell the app is still following you.
+        this.setQuestion(msg.text);
+        this.setHeard('');
         await this.speak(msg.audio);
         this.listen();
         break;
       case 'transcribed':
+        this.setHeard(`“${msg.text}”`);
         break;
       case 'no_speech':
+        this.setHeard('No te he oído bien. Inténtalo otra vez.');
         setTimeout(() => this.listen(), 400);
         break;
       case 'end':
@@ -172,20 +178,50 @@ class App {
   }
 
   startSilenceDetection() {
-    const THRESHOLD   = 35;
-    const SPEECH_MIN  = 500;
-    const SILENCE_MAX = 2000;
+    const SPEECH_MIN    = 500;
+    const SILENCE_MAX   = 2000;
+    const CALIBRATE_MS  = 350;   // listen to the room before judging
+    const MARGIN        = 10;    // how far above the room floor counts as speech
+    const MIN_THRESHOLD = 8;     // floor, for very quiet rooms
 
     const data = new Uint8Array(this.analyser.frequencyBinCount);
+
+    // Speech lives roughly between 85 Hz and 3.4 kHz. Averaging the whole
+    // spectrum buries it under ~110 near-empty high-frequency bins, so only
+    // measure the bins that can actually contain a voice.
+    const hzPerBin = (this.audioCtx.sampleRate / 2) / data.length;
+    const lo = Math.max(1, Math.floor(85 / hzPerBin));
+    const hi = Math.min(data.length - 1, Math.ceil(3400 / hzPerBin));
+
+    const speechLevel = () => {
+      this.analyser.getByteFrequencyData(data);
+      let sum = 0;
+      for (let i = lo; i <= hi; i++) sum += data[i];
+      return sum / (hi - lo + 1);
+    };
+
+    const startedAt = Date.now();
+    let floorSum = 0, floorCount = 0, threshold = null;
     let speechStart  = null;
     let speechReady  = false;
     let silenceStart = null;
 
     const check = () => {
-      this.analyser.getByteFrequencyData(data);
-      const avg = data.reduce((a, b) => a + b, 0) / data.length;
+      const avg = speechLevel();
 
-      if (avg > THRESHOLD) {
+      // Measure this room and this mic before deciding what counts as speech,
+      // instead of trusting one hardcoded number for every setup.
+      if (threshold === null) {
+        floorSum += avg;
+        floorCount++;
+        if (Date.now() - startedAt >= CALIBRATE_MS) {
+          threshold = Math.max(floorSum / floorCount + MARGIN, MIN_THRESHOLD);
+        }
+        this.silenceRaf = requestAnimationFrame(check);
+        return;
+      }
+
+      if (avg > threshold) {
         if (!speechStart) speechStart = Date.now();
         if (!speechReady && Date.now() - speechStart >= SPEECH_MIN) speechReady = true;
         silenceStart = null;
@@ -323,6 +359,14 @@ class App {
   setStatus(state, label) {
     document.getElementById('status-dot').className   = `dot ${state}`;
     document.getElementById('status-text').textContent = label;
+  }
+
+  setQuestion(text) {
+    document.getElementById('question-text').textContent = text || '';
+  }
+
+  setHeard(text) {
+    document.getElementById('heard-text').textContent = text || '';
   }
 
   setSilenceBar(progress) {
