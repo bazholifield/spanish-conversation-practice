@@ -41,6 +41,25 @@ class TerminalUI:
         ))
         self.console.print()
 
+    def choose_scenario(self, scenarios: list[dict]) -> str | None:
+        """Offer the scenario list; returns None for free conversation."""
+        if not scenarios:
+            return None
+
+        self.console.print(Rule("Escenarios"))
+        self.console.print("  [bold]0[/bold]  Free conversation")
+        for i, scenario in enumerate(scenarios, start=1):
+            self.console.print(f"  [bold]{i}[/bold]  {scenario['icon']} {scenario['name']}")
+        self.console.print()
+
+        choice = Prompt.ask(
+            "[bold green]Choose[/bold green]",
+            choices=[str(i) for i in range(len(scenarios) + 1)],
+            default="0",
+        )
+        self.console.print()
+        return None if choice == "0" else scenarios[int(choice) - 1]["id"]
+
     def speak_and_display(self, text: str, speaker: str = "bot") -> None:
         label = "[bold blue]Tutor:[/bold blue]" if speaker == "bot" else "[bold green]You:[/bold green]"
         self.console.print(f"{label} {text}")

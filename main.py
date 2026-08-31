@@ -1,6 +1,5 @@
-import sys
 from config.settings import Settings
-from src.session.manager import SessionManager
+from src.session.manager import SessionManager, load_scenario_index
 from ui.terminal import TerminalUI
 from ui.transcript_viewer import TranscriptViewer
 
@@ -11,7 +10,8 @@ def main():
     session = SessionManager(settings)
 
     ui.display_welcome()
-    session.start()
+    scenario_id = ui.choose_scenario(load_scenario_index(settings))
+    session.start(scenario_id=scenario_id)
     current_question = session.get_initial_question()
 
     while session.is_active():

@@ -27,13 +27,17 @@ python -m spacy download es_core_news_sm
 python main.py
 ```
 
+On start you choose a scenario, or `0` for free conversation.
+
 By default the tool runs in text mode (type your answers). To use your microphone, set `INPUT_MODE = "speech"` in `config/settings.py`. An internet connection is required for speech recognition and TTS.
 
 Type or say `salir` to end the session. The transcript is saved to `transcripts/` — open it in a browser to review vocabulary.
 
 ## Scenarios
 
-Pre-built conversation trees are in `data/scenarios/`: bar, restaurant, shopping, directions, meeting people, and medical. New scenarios can be added by dropping a JSON file into that directory following the same schema.
+Pre-built conversation trees are in `data/scenarios/`: bar, restaurant, shopping, directions, meeting people, and medical. New scenarios can be added by dropping a JSON file into that directory following the same schema — both front ends pick them up automatically, ordered by each file's `order` field.
+
+A session also ends early if you go off-script for `FALLBACK_RESPONSES_BEFORE_END` turns in a row (default 3), since the rule-based engine has stopped finding anything to follow up on.
 
 ## Limitations
 

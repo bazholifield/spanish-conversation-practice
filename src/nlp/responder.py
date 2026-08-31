@@ -11,6 +11,7 @@ class RuleBasedResponder:
         self._used: set[str] = set()
         self._scenario_patterns: list[dict] = []
         self._scenario_fallbacks: list[str] = []
+        self._consecutive_fallbacks = 0
 
     @property
     def patterns(self) -> dict:
@@ -24,36 +25,31 @@ class RuleBasedResponder:
         self._scenario_fallbacks = scenario.get("fallbacks", [])
 
     def generate_follow_up(self, parsed: ParsedResponse) -> str | None:
+        keywords = set(parsed.keywords)
+
         # 1. Scenario-specific keyword match (highest priority)
         for pattern in self._scenario_patterns:
-            triggers = set(pattern["triggers"]["keywords"])
-            if triggers & set(parsed.keywords):
+            if set(pattern["triggers"]["keywords"]) & keywords:
                 candidate = self._pick(pattern["follow_ups"])
                 if candidate:
+                    self._consecutive_fallbacks = 0
                     return candidate
 
         # 2. General keyword match
         for pattern in self.patterns["patterns"]:
-            triggers = set(pattern["triggers"]["keywords"])
-            if triggers & set(parsed.keywords):
+            if set(pattern["triggers"]["keywords"]) & keywords:
                 candidate = self._pick(pattern["follow_ups"])
                 if candidate:
+                    self._consecutive_fallbacks = 0
                     return candidate
 
-        # 3. General topic-label match
-        for pattern in self.patterns["patterns"]:
-            if pattern["id"] in parsed.topics:
-                candidate = self._pick(pattern["follow_ups"])
-                if candidate:
-                    return candidate
+        # 3. Nothing matched, probe with a fallback, but wrap up if the
+        #    conversation has drifted off-script too many turns in a row.
+        self._consecutive_fallbacks += 1
+        if self._consecutive_fallbacks >= self.settings.FALLBACK_RESPONSES_BEFORE_END:
+            return None
 
-        # 4. Scenario fallbacks
-        candidate = self._pick(self._scenario_fallbacks)
-        if candidate:
-            return candidate
-
-        # 5. General fallbacks — keep probing until exhausted
-        return self._pick(self.patterns["fallbacks"])
+        return self._pick(self._scenario_fallbacks) or self._pick(self.patterns["fallbacks"])
 
     def _pick(self, options: list[str]) -> str | None:
         available = [o for o in options if o not in self._used]

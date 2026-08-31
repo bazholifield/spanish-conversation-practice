@@ -6,6 +6,19 @@ from src.nlp.responder import RuleBasedResponder
 from src.session.transcript import Transcript, Turn
 
 
+def load_scenario_index(settings: Settings) -> list[dict]:
+    """Scenario metadata ({id, name, icon}), ordered by each file's `order` field."""
+    if not settings.SCENARIOS_DIR.exists():
+        return []
+
+    scenarios = [
+        json.loads(path.read_text(encoding="utf-8"))
+        for path in settings.SCENARIOS_DIR.glob("*.json")
+    ]
+    scenarios.sort(key=lambda s: s.get("order", 99))
+    return [{"id": s["id"], "name": s["name"], "icon": s["icon"]} for s in scenarios]
+
+
 class SessionManager:
     def __init__(self, settings: Settings):
         self.settings = settings

@@ -1,7 +1,7 @@
+import html
 import json
 import re
 from datetime import datetime
-from pathlib import Path
 
 from config.settings import Settings
 from src.session.transcript import Transcript
@@ -48,7 +48,6 @@ class TranscriptViewer:
                 clean = re.sub(r"[^a-záéíóúüñ]", "", part.lower())
                 punct_before = re.match(r"^([¿¡])", part)
                 punct_after = re.search(r"([.,!?;:]+)$", part)
-                word_text = part
                 prefix = punct_before.group(1) if punct_before else ""
                 suffix = punct_after.group(1) if punct_after else ""
                 inner = part[len(prefix):len(part) - len(suffix)]
@@ -57,11 +56,11 @@ class TranscriptViewer:
                     span = (
                         f'{prefix}<span class="word {speaker}-word" '
                         f'data-word="{clean}" '
-                        f'onclick="showWord(\'{clean}\')">{inner}</span>{suffix}'
+                        f'onclick="showWord(\'{clean}\')">{html.escape(inner)}</span>{suffix}'
                     )
                     result.append(span)
                 else:
-                    result.append(part)
+                    result.append(html.escape(part))
             else:
                 result.append(part)
         return "".join(result)
@@ -86,7 +85,8 @@ class TranscriptViewer:
 
     def _render(self, transcript: Transcript, vocab: dict) -> str:
         turns_html = self._turns_html(transcript)
-        vocab_json = json.dumps(vocab, ensure_ascii=False)
+        # Escape "<" so a translation containing "</script>" can't break out of the tag.
+        vocab_json = json.dumps(vocab, ensure_ascii=False).replace("<", "\\u003c")
         mins, secs = divmod(transcript.duration_seconds(), 60)
         date_str = transcript.started_at.strftime("%B %d, %Y %H:%M") if transcript.started_at else ""
 

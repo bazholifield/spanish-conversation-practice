@@ -3,7 +3,6 @@ import base64
 import json
 import os
 import tempfile
-from pathlib import Path
 
 import edge_tts
 import uvicorn
@@ -12,7 +11,7 @@ from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 
 from config.settings import Settings
-from src.session.manager import SessionManager
+from src.session.manager import SessionManager, load_scenario_index
 from ui.transcript_viewer import TranscriptViewer
 
 VOICE = "es-ES-AlvaroNeural"
@@ -47,22 +46,14 @@ def _transcribe_wav(wav_bytes: bytes, language: str) -> str | None:
 
 @app.get("/api/scenarios")
 async def list_scenarios():
-    settings = Settings()
-    scenarios = []
-    if settings.SCENARIOS_DIR.exists():
-        files = sorted(settings.SCENARIOS_DIR.glob("*.json"),
-                       key=lambda f: json.loads(f.read_text(encoding="utf-8")).get("order", 99))
-        for f in files:
-            data = json.loads(f.read_text(encoding="utf-8"))
-            scenarios.append({"id": data["id"], "name": data["name"], "icon": data["icon"]})
-    return JSONResponse(scenarios)
+    return JSONResponse(load_scenario_index(Settings()))
 
 
 @app.websocket("/ws")
 async def websocket_endpoint(ws: WebSocket):
     await ws.accept()
     settings = Settings()
-    loop = asyncio.get_event_loop()
+    loop = asyncio.get_running_loop()
     session = SessionManager(settings)
     viewer = TranscriptViewer(settings)
 
@@ -116,7 +107,7 @@ async def websocket_endpoint(ws: WebSocket):
         pass
 
 
-app.mount("/", StaticFiles(directory="static", html=True), name="static")
+app.mount("/", StaticFiles(directory=Settings.BASE_DIR / "static", html=True), name="static")
 
 
 if __name__ == "__main__":

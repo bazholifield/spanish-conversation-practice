@@ -26,6 +26,7 @@ class App {
     scenarios.forEach(s => {
       const btn = document.createElement('button');
       btn.className = 'scenario-card';
+      btn.dataset.id = s.id;
       btn.innerHTML = `<span class="scenario-icon">${s.icon}</span><span class="scenario-name">${s.name}</span>`;
       btn.addEventListener('click', () => this.init(s.id));
       grid.appendChild(btn);
