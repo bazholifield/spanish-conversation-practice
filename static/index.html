@@ -3,28 +3,52 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Spanish Practice</title>
+  <title>Práctica de Español</title>
   <link rel="stylesheet" href="/style.css">
 </head>
 <body>
 
-  <div id="start" class="screen active">
-    <p class="tagline">Práctica de Español</p>
-    <button id="start-btn">Comenzar</button>
-    <div class="divider"><span>o elige un escenario</span></div>
-    <div id="scenario-grid"></div>
-  </div>
+  <main>
+    <section id="start" class="screen active" aria-labelledby="start-heading" tabindex="-1">
+      <h1 id="start-heading" class="tagline">Práctica de Español</h1>
 
-  <div id="conversation" class="screen">
-    <p id="scenario-label"></p>
-    <div id="status">
-      <span id="status-dot" class="dot"></span>
-      <span id="status-text"></span>
-    </div>
-    <canvas id="wave"></canvas>
-    <div id="silence-track"><div id="silence-bar"></div></div>
-    <button id="end-btn">Terminar</button>
-  </div>
+      <button id="start-btn" type="button">
+        Comenzar
+        <span class="sr-only">una conversación libre</span>
+      </button>
+
+      <p id="mic-error" class="error-msg" role="alert" hidden></p>
+
+      <div class="divider" aria-hidden="true"><span>o elige un escenario</span></div>
+
+      <h2 id="scenario-heading" class="sr-only">Escenarios</h2>
+      <div id="scenario-grid" role="group" aria-labelledby="scenario-heading"></div>
+    </section>
+
+    <section id="conversation" class="screen" aria-labelledby="conversation-heading" tabindex="-1">
+      <h2 id="conversation-heading" class="sr-only">Conversación en curso</h2>
+      <p id="scenario-label"></p>
+
+      <p id="status" role="status" aria-live="polite">
+        <span id="status-dot" class="dot" aria-hidden="true"></span>
+        <span id="status-text"></span>
+      </p>
+
+      <canvas id="wave" aria-hidden="true"></canvas>
+
+      <div id="silence-track"
+           role="progressbar"
+           aria-labelledby="silence-label"
+           aria-valuemin="0"
+           aria-valuemax="100"
+           aria-valuenow="0">
+        <div id="silence-bar"></div>
+      </div>
+      <span id="silence-label" class="sr-only">Tiempo de silencio antes de enviar tu respuesta</span>
+
+      <button id="end-btn" type="button">Terminar</button>
+    </section>
+  </main>
 
   <script src="/app.js"></script>
 </body>

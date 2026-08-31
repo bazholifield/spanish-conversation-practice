@@ -40,7 +40,7 @@ class TranscriptViewer:
     # ------------------------------------------------------------------
 
     def _annotate(self, text: str, speaker: str) -> str:
-        """Wrap each word token in a clickable <span>."""
+        """Wrap each word token in a real <button> so it is keyboard-reachable."""
         parts = re.split(r"(\s+)", text)
         result = []
         for part in parts:
@@ -54,9 +54,8 @@ class TranscriptViewer:
 
                 if clean:
                     span = (
-                        f'{prefix}<span class="word {speaker}-word" '
-                        f'data-word="{clean}" '
-                        f'onclick="showWord(\'{clean}\')">{html.escape(inner)}</span>{suffix}'
+                        f'{prefix}<button type="button" class="word {speaker}-word" '
+                        f'data-word="{clean}">{html.escape(inner)}</button>{suffix}'
                     )
                     result.append(span)
                 else:
@@ -74,11 +73,11 @@ class TranscriptViewer:
       <div class="turn">
         <div class="bubble bot-bubble">
           <span class="label">Tutor</span>
-          <p>{bot}</p>
+          <p lang="es">{bot}</p>
         </div>
         <div class="bubble user-bubble">
           <span class="label">You</span>
-          <p>{user}</p>
+          <p lang="es">{user}</p>
         </div>
       </div>"""
         return html
@@ -107,40 +106,60 @@ class TranscriptViewer:
     min-height: 100vh;
   }}
 
+  .sr-only {{
+    position: absolute; width: 1px; height: 1px;
+    padding: 0; margin: -1px; overflow: hidden;
+    clip-path: inset(50%); white-space: nowrap; border: 0;
+  }}
+
   /* ── Layout ── */
   #main {{ flex: 1; max-width: 760px; margin: 0 auto; padding: 2rem 1.5rem 6rem; }}
+  /* visibility, not just transform, so the closed panel leaves the
+     accessibility tree and the tab order instead of lurking off-screen. */
   #panel {{
     position: fixed; right: 0; top: 0; bottom: 0;
     width: 340px; background: #16213e; border-left: 1px solid #0f3460;
     padding: 1.5rem; overflow-y: auto;
-    transform: translateX(100%); transition: transform 0.25s ease;
+    transform: translateX(100%); visibility: hidden;
+    transition: transform 0.25s ease, visibility 0s linear 0.25s;
   }}
-  #panel.open {{ transform: translateX(0); }}
+  #panel.open {{
+    transform: translateX(0); visibility: visible;
+    transition: transform 0.25s ease, visibility 0s;
+  }}
+  #panel:focus {{ outline: none; }}
   #main.panel-open {{ margin-right: 340px; }}
+
+  /* One consistent, high-contrast focus ring. */
+  :focus-visible {{ outline: 3px solid #7fb4ff; outline-offset: 2px; border-radius: 3px; }}
 
   /* ── Header ── */
   header {{ margin-bottom: 2rem; }}
   header h1 {{ font-size: 1.5rem; color: #e94560; margin-bottom: 0.25rem; }}
-  .meta {{ color: #888; font-size: 0.85rem; }}
-  .hint {{ font-size: 0.8rem; color: #555; margin-top: 0.5rem; font-style: italic; }}
+  .meta {{ color: #a8a8c0; font-size: 0.85rem; }}
+  .hint {{ font-size: 0.85rem; color: #a8a8c0; margin-top: 0.5rem; font-style: italic; }}
 
   /* ── Turns & Bubbles ── */
   .turn {{ margin-bottom: 1.5rem; }}
   .bubble {{ padding: 0.75rem 1rem; border-radius: 12px; margin-bottom: 0.5rem; max-width: 92%; line-height: 1.6; }}
   .bot-bubble {{ background: #0f3460; border-bottom-left-radius: 2px; }}
   .user-bubble {{ background: #2d2d44; margin-left: auto; border-bottom-right-radius: 2px; }}
-  .label {{ display: block; font-size: 0.7rem; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; margin-bottom: 0.35rem; opacity: 0.6; }}
-  .bot-bubble .label {{ color: #6ec6ff; }}
-  .user-bubble .label {{ color: #a5d6a7; }}
+  .label {{ display: block; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; margin-bottom: 0.35rem; }}
+  .bot-bubble .label {{ color: #9ad4ff; }}
+  .user-bubble .label {{ color: #b5e0b7; }}
 
-  /* ── Clickable words ── */
+  /* ── Clickable words ──
+     Real <button> elements, reset to read as inline text. */
   .word {{
     cursor: pointer; border-radius: 3px;
     transition: background 0.15s;
     padding: 0 1px;
+    background: none; border: none;
+    font: inherit; color: inherit;
+    line-height: inherit;
   }}
-  .word:hover {{ background: rgba(233, 69, 96, 0.25); }}
-  .word.active {{ background: rgba(233, 69, 96, 0.45); }}
+  .word:hover {{ background: rgba(233, 69, 96, 0.35); }}
+  .word.active {{ background: rgba(233, 69, 96, 0.55); }}
 
   /* ── Side panel ── */
   #panel h2 {{ font-size: 1.4rem; color: #e94560; margin-bottom: 0.25rem; }}
@@ -151,12 +170,20 @@ class TranscriptViewer:
     font-size: 1.3rem; cursor: pointer;
   }}
   #panel .close-btn:hover {{ color: #e94560; }}
-  .section-title {{ font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #888; margin: 1.2rem 0 0.5rem; }}
+  .section-title {{ font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #a8a8c0; margin: 1.2rem 0 0.5rem; }}
   table.conj {{ width: 100%; border-collapse: collapse; font-size: 0.85rem; }}
   table.conj th {{ text-align: left; color: #6ec6ff; font-weight: 600; padding: 0.25rem 0.5rem; border-bottom: 1px solid #0f3460; }}
   table.conj td {{ padding: 0.25rem 0.5rem; color: #ccc; }}
   table.conj tr:nth-child(even) td {{ background: rgba(255,255,255,0.03); }}
-  .no-data {{ color: #555; font-style: italic; font-size: 0.85rem; }}
+  .no-data {{ color: #a8a8c0; font-style: italic; font-size: 0.85rem; }}
+
+  @media (prefers-reduced-motion: reduce) {{
+    *, *::before, *::after {{
+      animation-duration: 0.001ms !important;
+      transition-duration: 0.001ms !important;
+    }}
+    #panel {{ transition: none; }}
+  }}
 </style>
 </head>
 <body>
@@ -164,55 +191,67 @@ class TranscriptViewer:
   <header>
     <h1>Spanish Practice Transcript</h1>
     <div class="meta">{date_str} &nbsp;·&nbsp; {len(transcript.turns)} turns &nbsp;·&nbsp; {mins}m {secs}s</div>
-    <div class="hint">Click any word to see its translation and conjugation.</div>
+    <div class="hint">Select any word (click, or Tab then Enter) to see its translation and conjugation. Escape closes the panel.</div>
   </header>
   {turns_html}
 </div>
 
-<div id="panel">
-  <button class="close-btn" onclick="closePanel()">✕</button>
+<aside id="panel" role="region" aria-label="Word details" tabindex="-1">
+  <button class="close-btn" type="button" aria-label="Close word details">✕</button>
   <div id="panel-body"></div>
-</div>
+</aside>
 
 <script>
 const vocab = {vocab_json};
 
-let activeEl = null;
+// Remembered so Escape can hand focus back to the word you came from.
+let lastTrigger = null;
 
-function showWord(word) {{
+function showWord(word, trigger) {{
   const data = vocab[word] || {{}};
+  lastTrigger = trigger || null;
 
-  // highlight clicked word
+  // highlight every instance of the selected word
   document.querySelectorAll('.word.active').forEach(el => el.classList.remove('active'));
   document.querySelectorAll(`[data-word="${{word}}"]`).forEach(el => el.classList.add('active'));
 
-  const translation = data.translation || '<span class="no-data">no translation found</span>';
-  let html = `<h2>${{word}}</h2><div class="translation">${{translation}}</div>`;
+  const translation = data.translation
+    ? `<div class="translation" lang="en">${{data.translation}}</div>`
+    : `<div class="translation"><span class="no-data">no translation found</span></div>`;
+  let html = `<h2 lang="es">${{word}}</h2>${{translation}}`;
 
   if (data.conjugation && Object.keys(data.conjugation).length > 0) {{
     html += `<div class="section-title">Conjugation</div>`;
     for (const [tense, forms] of Object.entries(data.conjugation)) {{
       html += `<div class="section-title" style="margin-top:0.8rem;color:#e0e0e0">${{tense}}</div>`;
-      html += `<table class="conj"><tbody>`;
+      html += `<table class="conj"><caption class="sr-only">${{tense}} of ${{word}}</caption><tbody>`;
       for (const [pronoun, form] of Object.entries(forms)) {{
-        html += `<tr><td style="color:#6ec6ff;width:45%">${{pronoun}}</td><td>${{form}}</td></tr>`;
+        html += `<tr><th scope="row" style="color:#6ec6ff;width:45%;font-weight:400" lang="es">${{pronoun}}</th><td lang="es">${{form}}</td></tr>`;
       }}
       html += `</tbody></table>`;
     }}
-  }} else if (data.translation) {{
-    html += `<div class="section-title">Word</div><p style="color:#ccc;font-size:0.9rem">${{word}}</p>`;
   }}
 
   document.getElementById('panel-body').innerHTML = html;
   document.getElementById('panel').classList.add('open');
   document.getElementById('main').classList.add('panel-open');
+  // Move focus in, so the panel is read out and its close button is reachable.
+  document.getElementById('panel').focus();
 }}
 
 function closePanel() {{
   document.getElementById('panel').classList.remove('open');
   document.getElementById('main').classList.remove('panel-open');
   document.querySelectorAll('.word.active').forEach(el => el.classList.remove('active'));
+  if (lastTrigger) {{ lastTrigger.focus(); lastTrigger = null; }}
 }}
+
+// Delegated, so no inline handlers and every word works via mouse or keyboard.
+document.addEventListener('click', e => {{
+  const word = e.target.closest('.word');
+  if (word) {{ showWord(word.dataset.word, word); return; }}
+  if (e.target.closest('.close-btn')) closePanel();
+}});
 
 document.addEventListener('keydown', e => {{ if (e.key === 'Escape') closePanel(); }});
 </script>

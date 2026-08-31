@@ -1,3 +1,5 @@
+const REDUCED_MOTION = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
 class App {
   constructor() {
     this.ws         = null;
@@ -25,19 +27,45 @@ class App {
     const grid = document.getElementById('scenario-grid');
     scenarios.forEach(s => {
       const btn = document.createElement('button');
+      btn.type = 'button';
       btn.className = 'scenario-card';
       btn.dataset.id = s.id;
-      btn.innerHTML = `<span class="scenario-icon">${s.icon}</span><span class="scenario-name">${s.name}</span>`;
+
+      // The emoji is decoration; the name alone is the accessible label.
+      const icon = document.createElement('span');
+      icon.className = 'scenario-icon';
+      icon.setAttribute('aria-hidden', 'true');
+      icon.textContent = s.icon;
+
+      const name = document.createElement('span');
+      name.className = 'scenario-name';
+      name.textContent = s.name;
+
+      btn.append(icon, name);
       btn.addEventListener('click', () => this.init(s.id));
       grid.appendChild(btn);
     });
   }
 
+  showError(message) {
+    const box = document.getElementById('mic-error');
+    box.textContent = message;
+    box.hidden = false;
+  }
+
+  clearError() {
+    const box = document.getElementById('mic-error');
+    box.hidden = true;
+    box.textContent = '';
+  }
+
   async init(scenarioId) {
+    this.clearError();
     try {
       this.stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
     } catch {
-      alert('Microphone access is required. Please allow it and try again.');
+      // Announced via role="alert", and focus stays on the button they pressed.
+      this.showError('Necesito acceso al micrófono. Permítelo en tu navegador e inténtalo de nuevo.');
       return;
     }
 
@@ -256,7 +284,10 @@ class App {
     let t = 0;
 
     const frame = () => {
-      this.rafId = requestAnimationFrame(frame);
+      // The idle shimmer is pure decoration, so it stops entirely when the
+      // viewer has asked for reduced motion. The live waveform stays, since
+      // that one is feedback about whether the mic is hearing you.
+      if (!REDUCED_MOTION) this.rafId = requestAnimationFrame(frame);
       const W = canvas.width, H = canvas.height;
       ctx.clearRect(0, 0, W, H);
       ctx.fillStyle  = '#1e1e3a';
@@ -295,13 +326,18 @@ class App {
   }
 
   setSilenceBar(progress) {
-    document.getElementById('silence-bar').style.width = `${Math.min(progress * 100, 100)}%`;
+    const pct = Math.min(Math.round(progress * 100), 100);
+    document.getElementById('silence-bar').style.width = `${pct}%`;
+    document.getElementById('silence-track').setAttribute('aria-valuenow', pct);
   }
 
   showScreen(name) {
     document.querySelectorAll('.screen').forEach(el => {
       el.classList.toggle('active', el.id === name);
     });
+    // Move focus into the screen we just revealed, so keyboard and screen
+    // reader users follow the transition instead of being stranded behind it.
+    document.getElementById(name)?.focus();
   }
 }
 
