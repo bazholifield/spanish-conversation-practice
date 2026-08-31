@@ -1,47 +1,37 @@
-# Spanish Conversation Practice Tool
+# Spanish Conversation Practice
 
-While living in Spain, I built this to reduce the anxiety of speaking Spanish in real life. It simulates short conversations by asking questions, listening to your answers, and following up without using an LLM. At the end of each session it saves an interactive transcript where you can click any word to see its definition and conjugation table.
+I built this while living in Spain, to help me practice speaking. It holds a simple conversation with you where it asks a question, listens to your answer, and asks a follow-up question, without using an LLM. When you're done, it saves a transcript you can click through word by word to see what you actually said.
 
 ## How it works
 
-1. **Dialogue manager** — a rule-based engine loads scenario question trees from JSON (`data/scenarios/`). It selects follow-up questions based on pattern matching against your response, keeping the conversation on-topic without needing a language model.
-2. **NLP pipeline** — [spaCy](https://spacy.io/) (`es_core_news_sm`) handles morphological analysis: lemmatization, POS tagging, and dependency parsing on every Spanish utterance.
-3. **Voice input** — `src/speech/stt.py` wraps the Google Speech Recognition API to transcribe microphone input. Text mode is also available for offline use.
-4. **TTS output** — `src/speech/tts.py` uses Edge TTS to speak the tool's prompts aloud.
-5. **Interactive transcript** — `ui/transcript_viewer.py` generates a self-contained HTML file. The frontend (`static/`) adds a click-to-lookup UI: clicking a word fires a vocabulary lookup and displays the definition and conjugation inline.
+The dialogue manager reads scenario trees from `data/scenarios/`, matches keywords in your reply against the triggers in each tree, and picks a follow-up from whatever fires. If nothing matches it reaches for a generic probe instead, and after three of those in a row it ends the session.
 
-## Tech stack
+Underneath, spaCy (`es_core_news_sm`) lemmatizes and tags every utterance, so "comí" and "comer" both hit the same trigger. Speech goes out to Google's recognizer, and Edge TTS reads the prompts back. The transcript viewer builds a standalone HTML file, translating each unique word once and conjugating anything that looks like an infinitive.
 
-Python · spaCy · Google Speech API · Edge TTS · HTML/CSS/JS frontend
-
-## Setup
+## Running it
 
 ```bash
 pip install -r requirements.txt
 python -m spacy download es_core_news_sm
 ```
 
-## Usage
+Two ways in:
 
 ```bash
-python main.py
+python main.py     # terminal
+python server.py   # browser, voice only, localhost:8000
 ```
 
-On start you choose a scenario, or `0` for free conversation.
+The terminal version asks which scenario you want, or `0` to just talk. It defaults to typing; set `INPUT_MODE = "speech"` in `config/settings.py` to use the mic instead. Say or type `salir` to stop. Transcripts land in `transcripts/`.
 
-By default the tool runs in text mode (type your answers). To use your microphone, set `INPUT_MODE = "speech"` in `config/settings.py`. An internet connection is required for speech recognition and TTS.
-
-Type or say `salir` to end the session. The transcript is saved to `transcripts/` — open it in a browser to review vocabulary.
+Speech and translation both need a network connection. Typing works offline, apart from the vocabulary lookups the transcript does at the end.
 
 ## Scenarios
 
-Pre-built conversation trees are in `data/scenarios/`: bar, restaurant, shopping, directions, meeting people, and medical. New scenarios can be added by dropping a JSON file into that directory following the same schema — both front ends pick them up automatically, ordered by each file's `order` field.
+Six of them: a bar, a restaurant, shopping, asking directions, meeting someone, and the doctor. They're plain JSON, so a new one can be added by dropping a file into `data/scenarios/` with the same format. Both front ends find it on their own and sort by the `order` field.
 
-A session also ends early if you go off-script for `FALLBACK_RESPONSES_BEFORE_END` turns in a row (default 3), since the rule-based engine has stopped finding anything to follow up on.
+## What it doesn't do
 
-## Limitations
+It only speaks Spanish, and the spaCy model and every scenario tree are Spanish-specific, so another language means another pipeline and a full retranslation.
 
-- **Rule-based by design** — the dialogue manager was built deliberately rather than delegating conversation logic to an API, which meant writing the NLP pipeline from scratch. The tradeoff is that responses outside the expected pattern can break the conversational flow.
-- **Internet required for speech** — Google Speech Recognition and Edge TTS both need a network connection. Text mode works offline.
-- **Spanish only** — the spaCy model and scenario trees are Spanish-specific; adapting to another language requires a new spaCy pipeline and translated scenario files.
-- **No memory across sessions** — each session starts fresh; the tool doesn't track vocabulary you've struggled with over time.
+It has no memory between sessions, and it won't correct you, just keep the conversation going.
