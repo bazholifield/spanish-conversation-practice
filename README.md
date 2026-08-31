@@ -1,6 +1,6 @@
 # Spanish Conversation Practice
 
-I built this while living in Spain, to help me practice speaking. It holds a simple conversation with you where it asks a question, listens to your answer, and asks a follow-up question, without using an LLM. When you're done, it saves a transcript you can click through word by word to see what you actually said.
+I built this while living in Spain to help me practice speaking. It holds a simple conversation with you where it asks a question, listens to your answer, and asks a follow-up question, without using an LLM. When you're done, it saves a transcript you can click through word by word to see what you actually said.
 
 ## How it works
 
